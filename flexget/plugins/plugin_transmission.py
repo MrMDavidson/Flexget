@@ -207,6 +207,8 @@ class PluginTransmission(TransmissionBase):
         advanced.accept('number', key='maxupspeed')
         advanced.accept('number', key='maxdownspeed')
         advanced.accept('number', key='ratio')
+        advanced.accept('text', key='content_filename')
+        advanced.accept('boolean', key='main_file_only')
         return root
 
     @plugin.priority(120)
@@ -330,6 +332,29 @@ class PluginTransmission(TransmissionBase):
                 if r:
                     torrent = r.values()[0]
                 log.info('"%s" torrent added to transmission' % (entry['title']))
+
+                if config['main_file_only'] == True:
+                    files = cli.get_files(torrent.id)
+
+                    torrent_size = 0;
+                    for f in files[torrent.id]:
+                        torrent_size = torrent_size + files[torrent.id][f]['size']
+
+                    unwanted_files = list()
+                    wanted_files = list()
+                    largest_file = None
+                    for f in files[torrent.id]:
+                        if  files[torrent.id][f]['size'] > (torrent_size * 0.9):
+                            log.info("%s is greater than 90%% of the total torrent size (%i) and will be downloaded", files[torrent.id][f]['name'], torrent_size)
+                            largest_file = files[torrent.id][f]
+                            wanted_files.append(f)
+                        else:
+                            log.info("%s is less than 90%% of the total torrent size (%i) and won't be downloaded", files[torrent.id][f]['name'], torrent_size)
+                            unwanted_files.append(f)
+
+                    cli.change_torrent(torrent.id, 30, **{ 'files_wanted': wanted_files, 'files_unwanted': unwanted_files })
+
+                    
                 if options['change'].keys():
                     for id in r.keys():
                         cli.change(id, 30, **options['change'])
