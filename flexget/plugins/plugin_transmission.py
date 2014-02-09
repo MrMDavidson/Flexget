@@ -345,14 +345,13 @@ class PluginTransmission(TransmissionBase):
                     largest_file = None
                     for f in files[torrent.id]:
                         if  files[torrent.id][f]['size'] > (torrent_size * 0.9):
-                            log.info("%s is greater than 90%% of the total torrent size (%i) and will be downloaded", files[torrent.id][f]['name'], torrent_size)
                             largest_file = files[torrent.id][f]
                             wanted_files.append(f)
                         else:
                             log.info("%s is less than 90%% of the total torrent size (%i) and won't be downloaded", files[torrent.id][f]['name'], torrent_size)
                             unwanted_files.append(f)
 
-                    cli.change_torrent(torrent.id, 30, **{ 'files_wanted': wanted_files, 'files_unwanted': unwanted_files })
+                    cli.change_torrent(torrent.id, 30, **{ 'files_wanted': wanted_files, 'files_unwanted': unwanted_files, 'location': options['add']['download_dir'] })
 
                     
                 if options['change'].keys():
